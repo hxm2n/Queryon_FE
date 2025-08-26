@@ -23,7 +23,7 @@ const Login = () => {
       localStorage.setItem('token', token);
       alert('로그인 성공!');
     } catch (error) {
-      console.error('로그인 실패!');
+      console.error('로그인 실패!', error.response?.data || error.message);
       alert('로그인 실패!');
     }
   };
