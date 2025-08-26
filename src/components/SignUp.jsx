@@ -24,7 +24,7 @@ const SignUp = () => {
       localStorage.setItem('token', token);
       alert('회원가입 성공');
     } catch (error) {
-      console.error('회원가입 실패');
+      console.error('회원가입 실패', error.response?.data || error.message);
       alert('회원가입 실패');
     }
   };
