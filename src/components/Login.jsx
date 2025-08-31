@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled from '@emotion/styled';
 import axios from 'axios';
+import { useMutation } from '@tanstack/react-query';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -9,35 +10,41 @@ const Login = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async () => {
-    try {
+  const { mutate, isLoading, isError, isSuccess, error } = useMutation({
+    mutationFn: async (loginData) => {
       const response = await axios.post(
         'http://localhost:3000/api/auth/login',
-        {
-          email: form.email,
-          password: form.password,
-        }
+        loginData
       );
-      const { token } = response.data;
-      console.log('로그인 성공! 저장된 토큰: ', token);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      console.log('로그인 성공! 저장된 토큰: ', data.token);
       alert('로그인 성공!');
-    } catch (error) {
-      console.error('로그인 실패', error.response?.data || error.message);
-      alert('로그인 실패');
-    }
+    },
+    onError: (err) => {
+      console.log('로그인 실패!', err.response?.data || err.message);
+      alert('로그인 실패!');
+    },
+  });
+
+  const handleSubmit = () => {
+    mutate(form);
   };
 
   return (
     <Container>
       <Title>로그인</Title>
-      <Input name="email" placeholder="이메일" onChange={handleChange} />
+      <Input name="email" placeholder="이메일" onChange={handleChange}></Input>
       <Input
         type="password"
         name="password"
         placeholder="비밀번호"
         onChange={handleChange}
       />
-      <Button onClick={handleSubmit}>로그인</Button>
+      <Button onClick={handleSubmit} disabled={isLoading}>
+        {isLoading ? '로그인 중...' : '로그인'}
+      </Button>
     </Container>
   );
 };
