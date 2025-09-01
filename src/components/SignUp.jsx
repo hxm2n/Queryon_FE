@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled from '@emotion/styled';
 import axios from 'axios';
+import { useMutation } from '@tanstack/react-query';
 
 const SignUp = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -8,25 +9,27 @@ const SignUp = () => {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-
-  const handleSubmit = async () => {
-    try {
+  const { mutate, isLoading } = useMutation({
+    mutationFn: async (singUpData) => {
       const response = await axios.post(
         'http://localhost:3000/api/auth/register',
-        {
-          name: form.name,
-          email: form.email,
-          password: form.email,
-        }
+        singUpData
       );
-      const { token } = response.data;
-      console.log('회원가입 성공! 토큰:', token);
-      localStorage.setItem('token', token);
-      alert('회원가입 성공');
-    } catch (error) {
-      console.error('회원가입 실패', error.response?.data || error.message);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      localStorage.setItem('token', data.token);
+      console.log('회원가입 성공! 저장된 토큰: ', data.token);
+      alert('회원가입 성공!');
+    },
+    onError: (err) => {
+      console.log('회원가입 실패', err.response?.data || err.message);
       alert('회원가입 실패');
-    }
+    },
+  });
+
+  const handleSubmit = () => {
+    mutate(form);
   };
 
   return (
@@ -40,7 +43,9 @@ const SignUp = () => {
         placeholder="비밀번호"
         onChange={handleChange}
       />
-      <Button onClick={handleSubmit}>회원가입</Button>
+      <Button onClick={handleSubmit} disabled={isLoading}>
+        {isLoading ? '회원가입 중...' : '회원가입'}
+      </Button>
     </Container>
   );
 };
