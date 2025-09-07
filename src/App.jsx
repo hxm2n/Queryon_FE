@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
 import PostList from './components/PostList';
+import { useThemeStore } from './store/themeStore';
 
 const App = () => {
   const [page, setPage] = useState('login');

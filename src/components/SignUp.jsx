@@ -2,29 +2,33 @@ import { useState } from 'react';
 import styled from '@emotion/styled';
 import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
+import { useAuthStore } from '../store/authStore';
 
 const SignUp = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const setToken = useAuthStore((state) => state.setToken);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
+
   const { mutate, isLoading } = useMutation({
-    mutationFn: async (singUpData) => {
+    mutationFn: async (signUpData) => {
       const response = await axios.post(
         'http://localhost:3000/api/auth/register',
-        singUpData
+        signUpData
       );
       return response.data;
     },
     onSuccess: (data) => {
+      setToken(data.token);
       localStorage.setItem('token', data.token);
       console.log('회원가입 성공! 저장된 토큰: ', data.token);
       alert('회원가입 성공!');
     },
     onError: (err) => {
       console.log('회원가입 실패', err.response?.data || err.message);
-      alert('회원가입 실패');
+      alert('회원가입 실패!', err.message);
     },
   });
 
@@ -40,7 +44,7 @@ const SignUp = () => {
       <Input
         type="password"
         name="password"
-        placeholder="비밀번호"
+        placeholder="비밀번호 (6자 이상)"
         onChange={handleChange}
       />
       <Button onClick={handleSubmit} disabled={isLoading}>

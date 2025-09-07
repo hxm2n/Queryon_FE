@@ -1,53 +1,44 @@
-import { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
+import { useAuthStore } from '../store/authStore';
+
+const fetchPost = async (token) => {
+  const response = await axios.get('http://localhost:3000/api/posts', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
 
 const PostList = () => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const token = useAuthStore((state) => state.token);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/api/posts');
-        setPosts(response.data);
-      } catch (err) {
-        console.error(
-          '게시글 불러오기 실패:',
-          err.response?.data || err.message
-        );
-        setError('게시글 불러오기 실패');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: posts } = useQuery({
+    queryKey: ['posts'],
+    queryFn: () => fetchPost(token),
+    enabled: !!token,
+  });
 
-    fetchPosts();
-  }, []);
-
-  const handleEdit = (postId) => {
-    console.log(`수정 클릭됨! 글 ID: ${postId}`);
+  const Edit = (postId) => {
+    console.log('수정 버튼 클릭됨! 글 id: ', postId);
   };
-
-  const handleDelete = (postId) => {
-    console.log(`삭제 클릭됨! 글 ID: ${postId}`);
+  const Delete = (postId) => {
+    console.log('삭제 버튼 클릭됨! 글 id: ', postId);
   };
-
-  if (loading) return <p>로딩 중...</p>;
-  if (error) return <p>{error}</p>;
 
   return (
     <Container>
       <Title>게시물 목록</Title>
-      {posts.map((post) => (
+      {posts?.map((post) => (
         <Card key={post.id}>
           <h4>{post.title}</h4>
           <p>{post.content}</p>
           <small>{post.tags?.join(', ')}</small>
           <ButtonContainer>
-            <Button onClick={() => handleEdit(post.id)}>수정</Button>
-            <Button onClick={() => handleDelete(post.id)} delete>
+            <Button onClick={() => Edit(post.id)}>수정</Button>
+            <Button onClick={() => Delete(post.id)} delete>
               삭제
             </Button>
           </ButtonContainer>
