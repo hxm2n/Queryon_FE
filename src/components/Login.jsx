@@ -2,15 +2,17 @@ import { useState } from 'react';
 import styled from '@emotion/styled';
 import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
+import { useAuthStore } from '../store/authStore';
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
+  const setToken = useAuthStore((state) => state.setToken);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const { mutate, isLoading, isError, isSuccess, error } = useMutation({
+  const { mutate, isLoading } = useMutation({
     mutationFn: async (loginData) => {
       const response = await axios.post(
         'http://localhost:3000/api/auth/login',
@@ -19,12 +21,14 @@ const Login = () => {
       return response.data;
     },
     onSuccess: (data) => {
+      setToken(data.token);
+      localStorage.setItem('token', data.token);
       console.log('로그인 성공! 저장된 토큰: ', data.token);
       alert('로그인 성공!');
     },
-    onError: (err) => {
-      console.log('로그인 실패!', err.response?.data || err.message);
-      alert('로그인 실패!');
+    onError: (error) => {
+      console.log('로그인 실패', error.response?.data || error.message);
+      alert('로그인 실패!', error.message);
     },
   });
 
